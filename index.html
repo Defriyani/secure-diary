@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Diary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"], input[type="password"], textarea {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="login-container">
+        <h1>Secure Diary - Login</h1>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Masukkan username" required>
+            <input type="password" id="login-password" placeholder="Masukkan password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div class="container hidden" id="diary-container">
+        <h1>Secure Diary</h1>
+
+        <!-- Form to Add New Note -->
+        <form id="add-note-form">
+            <textarea id="note" placeholder="Tulis catatanmu di sini..." required></textarea>
+            <input type="password" id="password" placeholder="Masukkan password" required>
+            <button type="submit">Simpan Catatan</button>
+        </form>
+
+        <!-- Section for Stored Notes -->
+        <div id="notes-list">
+            <h2>Daftar Catatan</h2>
+            <ul id="notes"></ul>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const loginContainer = document.getElementById('login-container');
+        const diaryContainer = document.getElementById('diary-container');
+
+        // Dummy login validation
+        const validUsername = 'user';
+        const validPassword = 'password';
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (username === validUsername && password === validPassword) {
+                loginContainer.classList.add('hidden');
+                diaryContainer.classList.remove('hidden');
+            } else {
+                alert('Username atau password salah!');
+            }
+        });
+
+        const form = document.getElementById('add-note-form');
+        const notesList = document.getElementById('notes');
+
+        // Caesar Cipher Functionality
+        function caesarEncrypt(text, shift) {
+            return text.split('').map(char => {
+                if (char.match(/[a-z]/i)) {
+                    const charCode = char.charCodeAt(0);
+                    const base = charCode >= 65 && charCode <= 90 ? 65 : 97;
+                    return String.fromCharCode(((charCode - base + shift) % 26) + base);
+                }
+                return char;
+            }).join('');
+        }
+
+        function caesarDecrypt(text, shift) {
+            return caesarEncrypt(text, 26 - shift);
+        }
+
+        // Store Notes
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const note = document.getElementById('note').value;
+            const password = document.getElementById('password').value;
+            const encryptedNote = caesarEncrypt(note, password.length);
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span class="hidden">${encryptedNote}</span>
+                <input type="password" placeholder="Masukkan password untuk membuka">
+                <button class="decrypt">Buka</button>
+            `;
+
+            notesList.appendChild(listItem);
+
+            // Clear the form
+            form.reset();
+        });
+
+        // Decrypt Notes
+        notesList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('decrypt')) {
+                const listItem = e.target.parentElement;
+                const encryptedNote = listItem.querySelector('span').textContent;
+                const passwordInput = listItem.querySelector('input[type="password"]');
+                const password = passwordInput.value;
+
+                if (password) {
+                    const decryptedNote = caesarDecrypt(encryptedNote, password.length);
+                    alert(`Catatanmu: ${decryptedNote}`);
+                } else {
+                    alert('Masukkan password terlebih dahulu!');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
